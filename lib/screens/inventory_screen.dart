@@ -47,6 +47,110 @@ class _InventoryScreenState extends State<InventoryScreen> {
     super.dispose();
   }
 
+  // Loads an existing item into a form, validates it, and writes
+  // the new values back to Firestore
+  Future<void> _showEditDialog(Item item) async {
+    final nameController = TextEditingController(text: item.name);
+    final quantityController =
+        TextEditingController(text: item.quantity.toString());
+    final priceController =
+        TextEditingController(text: item.price.toString());
+
+    final editFormKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Item'),
+          content: Form(
+            key: editFormKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Item Name'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter an item name';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: quantityController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Quantity'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a quantity';
+                      }
+                      final quantity = int.tryParse(value.trim());
+                      if (quantity == null || quantity < 0) {
+                        return 'Enter a valid non-negative integer';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: priceController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Price'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a price';
+                      }
+                      final price = double.tryParse(value.trim());
+                      if (price == null || price < 0) {
+                        return 'Enter a valid non-negative price';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!editFormKey.currentState!.validate()) return;
+
+                final updatedItem = Item(
+                  id: item.id,
+                  name: nameController.text.trim(),
+                  quantity: int.parse(quantityController.text.trim()),
+                  price: double.parse(priceController.text.trim()),
+                );
+
+                await service.updateItem(updatedItem);
+
+                if (!mounted) return;
+                Navigator.pop(context);
+
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  const SnackBar(content: Text('Item updated successfully')),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,17 +257,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           subtitle: Text(
                             'Qty: ${item.quantity} | \$${item.price.toStringAsFixed(2)}',
                           ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () async {
-                              await service.deleteItem(item.id!);
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  _showEditDialog(item);
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () async {
+                                  await service.deleteItem(item.id!);
 
-                              if (!mounted) return;
-                              
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('${item.name} deleted'))
-                              );
-                            },
+                                  if (!mounted) return;
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('${item.name} deleted')),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                         ),
                       );
