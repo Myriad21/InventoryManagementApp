@@ -278,6 +278,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               IconButton(
                                 icon: const Icon(Icons.delete),
                                 onPressed: () async {
+                                  final shouldDelete = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: const Text('Delete Item'),
+                                        content: Text('Are you sure you want to delete "${item.name}"?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context, false);
+                                            },
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              Navigator.pop(context, true);
+                                            },
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+
+                                  if (shouldDelete != true) return;
+
                                   await service.deleteItem(item.id!);
 
                                   if (!mounted) return;
