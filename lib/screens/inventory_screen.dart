@@ -153,6 +153,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           subtitle: Text(
                             'Qty: ${item.quantity} | \$${item.price.toStringAsFixed(2)}',
                           ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () async {
+                              await service.deleteItem(item.id!);
+
+                              if (!mounted) return;
+                              
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${item.name} deleted'))
+                              );
+                            },
+                          ),
                         ),
                       );
                     },
