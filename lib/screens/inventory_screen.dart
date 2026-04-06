@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/items.dart';
 import '../services/firestore_service.dart';
 import '../widgets/item_form.dart';
+import '../widgets/item_list.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -262,80 +263,44 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
                   final items = _sortItems(snapshot.data ?? []);
 
-                  if (items.isEmpty) {
-                    return const Center(child: Text('No items yet.'));
-                  }
-
-                  return ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-
-                      return Card(
-                        child: ListTile(
-                          title: Text(
-                            item.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text('Quantity: ${item.quantity}'),
-                              Text('Price: \$${item.price.toStringAsFixed(2)}'),
-                            ],
-                          ),
-                          isThreeLine: true,
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
+                  return ItemList(
+                    items: items,
+                    onEdit: (item) {
+                      _showEditDialog(item);
+                    },
+                    onDelete: (item) async {
+                      final shouldDelete = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Delete Item'),
+                            content: Text('Are you sure you want to delete "${item.name}"?'),
+                            actions: [
+                              TextButton(
                                 onPressed: () {
-                                  _showEditDialog(item);
+                                  Navigator.pop(context, false);
                                 },
+                                child: const Text('Cancel'),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () async {
-                                  final shouldDelete = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: const Text('Delete Item'),
-                                        content: Text('Are you sure you want to delete "${item.name}"?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context, false);
-                                            },
-                                            child: const Text('Cancel'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              Navigator.pop(context, true);
-                                            },
-                                            child: const Text('Delete'),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-
-                                  if (shouldDelete != true) return;
-
-                                  await service.deleteItem(item.id!);
-
-                                  if (!mounted) return;
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('${item.name} deleted')),
-                                  );
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context, true);
                                 },
+                                child: const Text('Delete'),
                               ),
                             ],
-                          ),
-                        ),
+                          );
+                        },
+                      );
+
+                      if (shouldDelete != true) return;
+
+                      await service.deleteItem(item.id!);
+
+                      if (!mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${item.name} deleted')),
                       );
                     },
                   );
