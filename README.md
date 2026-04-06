@@ -1,17 +1,24 @@
-# inventory_management_app
+# Inventory Management App
 
-A new Flutter project.
+## Overview
+This is a Flutter inventory management app that uses Firebase Firestore for real-time data storage. Users can create, view, update, and delete inventory items, and the UI updates automatically using StreamBuilder.
 
-## Getting Started
+## Features
+- Add new inventory items
+- Edit existing items
+- Delete items with confirmation
+- Real-time updates using Firestore streams
+- Form validation for all inputs
 
-This project is a starting point for a Flutter application.
+## Enhanced Features
+1. **Sorting System**
+   - Users can sort items by name or price (low to high / high to low)
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+2. **Delete Confirmation Dialog**
+   - Before deleting an item, the app shows a confirmation dialog to prevent    accidental data loss.
+## How to Run
+- Install the APK on your device  
+OR  
+- Run using Flutter:
+```bash
+flutter run
