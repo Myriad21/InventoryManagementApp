@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/items.dart';
 import '../services/firestore_service.dart';
+import '../widgets/item_form.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -65,35 +66,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Edit Item'),
-          content: Form(
-            key: editFormKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Item Name'),
-                    validator: _validateName,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: quantityController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Quantity'),
-                    validator: _validateQuantity,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: priceController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Price'),
-                    validator: _validatePrice,
-                  ),
-                ],
-              ),
-            ),
+          content: ItemForm(
+            formKey: _formKey,
+            nameController: _nameController,
+            quantityController: _quantityController,
+            priceController: _priceController,
+            validateName: _validateName,
+            validateQuantity: _validateQuantity,
+            validatePrice: _validatePrice,
+            onSubmit: _addItem,
           ),
           actions: [
             TextButton(
