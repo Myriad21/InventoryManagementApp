@@ -16,6 +16,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   final _nameController = TextEditingController();
   final _quantityController = TextEditingController();
   final _priceController = TextEditingController();
+  
+  String _sortOption = 'name';
 
   Future<void> _addItem() async {
     if (!_formKey.currentState!.validate()) return;
@@ -151,6 +153,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
+  List<Item> _sortItems(List<Item> items) {
+    final sortedItems = List<Item>.from(items);
+
+    switch (_sortOption) {
+      case 'priceLow':
+        sortedItems.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'priceHigh':
+        sortedItems.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'name':
+      default:
+        sortedItems.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+    }
+
+    return sortedItems;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -224,6 +244,37 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       child: const Text('Add Item'),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Text('Sort by: '),
+                      const SizedBox(width: 12),
+                      DropdownButton<String>(
+                        value: _sortOption,
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'name',
+                            child: Text('Name'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'priceLow',
+                            child: Text('Price: Low to High'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'priceHigh',
+                            child: Text('Price: High to Low'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            _sortOption = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -240,7 +291,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   }
 
-                  final items = snapshot.data ?? [];
+                  final items = _sortItems(snapshot.data ?? []);
 
                   if (items.isEmpty) {
                     return const Center(child: Text('No items yet.'));
