@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/items.dart';
 import '../services/firestore_service.dart';
-import '../widgets/item_form.dart';
 import '../widgets/item_list.dart';
+import 'add_item_screen.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -14,103 +14,7 @@ class InventoryScreen extends StatefulWidget {
 class _InventoryScreenState extends State<InventoryScreen> {
   final FirestoreService service = FirestoreService();
 
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _quantityController = TextEditingController();
-  final _priceController = TextEditingController();
-  
   String _sortOption = 'name';
-
-  Future<void> _addItem() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final item = Item(
-      name: _nameController.text.trim(),
-      quantity: int.parse(_quantityController.text.trim()),
-      price: double.parse(_priceController.text.trim()),
-    );
-
-    await service.addItem(item);
-
-    _nameController.clear();
-    _quantityController.clear();
-    _priceController.clear();
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Item added successfully')),
-    );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _quantityController.dispose();
-    _priceController.dispose();
-    super.dispose();
-  }
-
-  // Loads an existing item into a form, validates it, and writes
-  // the new values back to Firestore
-  Future<void> _showEditDialog(Item item) async {
-    final nameController = TextEditingController(text: item.name);
-    final quantityController =
-        TextEditingController(text: item.quantity.toString());
-    final priceController =
-        TextEditingController(text: item.price.toString());
-
-    final editFormKey = GlobalKey<FormState>();
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Item'),
-          content: ItemForm(
-            formKey: _formKey,
-            nameController: _nameController,
-            quantityController: _quantityController,
-            priceController: _priceController,
-            validateName: _validateName,
-            validateQuantity: _validateQuantity,
-            validatePrice: _validatePrice,
-            onSubmit: _addItem,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!editFormKey.currentState!.validate()) return;
-
-                final updatedItem = Item(
-                  id: item.id,
-                  name: nameController.text.trim(),
-                  quantity: int.parse(quantityController.text.trim()),
-                  price: double.parse(priceController.text.trim()),
-                );
-
-                await service.updateItem(updatedItem);
-
-                if (!mounted) return;
-                Navigator.pop(context);
-
-                ScaffoldMessenger.of(this.context).showSnackBar(
-                  const SnackBar(content: Text('Item updated successfully')),
-                );
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   List<Item> _sortItems(List<Item> items) {
     final sortedItems = List<Item>.from(items);
@@ -124,13 +28,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
         break;
       case 'name':
       default:
-        sortedItems.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        sortedItems.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         break;
     }
 
     return sortedItems;
   }
-  
+
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter an item name';
@@ -163,23 +69,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
     return null;
   }
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inventory App'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Form(
-              key: _formKey,
+
+  Future<void> _showEditDialog(Item item) async {
+    final nameController = TextEditingController(text: item.name);
+    final quantityController =
+        TextEditingController(text: item.quantity.toString());
+    final priceController =
+        TextEditingController(text: item.price.toString());
+
+    final editFormKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Edit Item'),
+          content: Form(
+            key: editFormKey,
+            child: SingleChildScrollView(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   TextFormField(
-                    controller: _nameController,
+                    controller: nameController,
                     decoration: const InputDecoration(
                       labelText: 'Item Name',
                       border: OutlineInputBorder(),
@@ -188,7 +100,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
-                    controller: _quantityController,
+                    controller: quantityController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       labelText: 'Quantity',
@@ -198,55 +110,140 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
-                    controller: _priceController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    controller: priceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Price',
                       border: OutlineInputBorder(),
                     ),
                     validator: _validatePrice,
                   ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _addItem,
-                      child: const Text('Add Item'),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Text('Sort by: '),
-                      const SizedBox(width: 12),
-                      DropdownButton<String>(
-                        value: _sortOption,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'name',
-                            child: Text('Name'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'priceLow',
-                            child: Text('Price: Low to High'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'priceHigh',
-                            child: Text('Price: High to Low'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _sortOption = value;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
                 ],
               ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!editFormKey.currentState!.validate()) return;
+
+                final updatedItem = Item(
+                  id: item.id,
+                  name: nameController.text.trim(),
+                  quantity: int.parse(quantityController.text.trim()),
+                  price: double.parse(priceController.text.trim()),
+                );
+
+                await service.updateItem(updatedItem);
+
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Item updated successfully')),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteItem(Item item) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Item'),
+          content: Text('Are you sure you want to delete "${item.name}"?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    await service.deleteItem(item.id!);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${item.name} deleted')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Inventory App'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AddItemScreen(),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Text('Sort by: '),
+                const SizedBox(width: 12),
+                DropdownButton<String>(
+                  value: _sortOption,
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'name',
+                      child: Text('Name'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'priceLow',
+                      child: Text('Price: Low to High'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'priceHigh',
+                      child: Text('Price: High to Low'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _sortOption = value;
+                    });
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -258,7 +255,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   }
 
                   if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
+                    return Center(
+                      child: Text('Error: ${snapshot.error}'),
+                    );
                   }
 
                   final items = _sortItems(snapshot.data ?? []);
@@ -269,39 +268,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       _showEditDialog(item);
                     },
                     onDelete: (item) async {
-                      final shouldDelete = await showDialog<bool>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text('Delete Item'),
-                            content: Text('Are you sure you want to delete "${item.name}"?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, false);
-                                },
-                                child: const Text('Cancel'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context, true);
-                                },
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-
-                      if (shouldDelete != true) return;
-
-                      await service.deleteItem(item.id!);
-
-                      if (!mounted) return;
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${item.name} deleted')),
-                      );
+                      await _deleteItem(item);
                     },
                   );
                 },
