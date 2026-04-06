@@ -253,10 +253,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
                       return Card(
                         child: ListTile(
-                          title: Text(item.name),
-                          subtitle: Text(
-                            'Qty: ${item.quantity} | \$${item.price.toStringAsFixed(2)}',
+                          title: Text(
+                            item.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Text('Quantity: ${item.quantity}'),
+                              Text('Price: \$${item.price.toStringAsFixed(2)}'),
+                            ],
+                          ),
+                          isThreeLine: true,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
