@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:inventory_management_app/screens/inventory_screen.dart';
 import 'firebase_options.dart';
-import 'models/items.dart';
 import 'services/firestore_service.dart';
 
 final service = FirestoreService();
