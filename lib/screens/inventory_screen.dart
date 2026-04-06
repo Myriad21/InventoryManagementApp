@@ -74,28 +74,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   TextFormField(
                     controller: nameController,
                     decoration: const InputDecoration(labelText: 'Item Name'),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter an item name';
-                      }
-                      return null;
-                    },
+                    validator: _validateName,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: quantityController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(labelText: 'Quantity'),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a quantity';
-                      }
-                      final quantity = int.tryParse(value.trim());
-                      if (quantity == null || quantity < 0) {
-                        return 'Enter a valid non-negative integer';
-                      }
-                      return null;
-                    },
+                    validator: _validateQuantity,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -103,16 +89,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(labelText: 'Price'),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a price';
-                      }
-                      final price = double.tryParse(value.trim());
-                      if (price == null || price < 0) {
-                        return 'Enter a valid non-negative price';
-                      }
-                      return null;
-                    },
+                    validator: _validatePrice,
                   ),
                 ],
               ),
@@ -171,6 +148,40 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
     return sortedItems;
   }
+  
+  String? _validateName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter an item name';
+    }
+    return null;
+  }
+
+  String? _validateQuantity(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter a quantity';
+    }
+
+    final quantity = int.tryParse(value.trim());
+    if (quantity == null || quantity < 0) {
+      return 'Enter a valid non-negative integer';
+    }
+
+    return null;
+  }
+
+  String? _validatePrice(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter a price';
+    }
+
+    final price = double.tryParse(value.trim());
+    if (price == null || price < 0) {
+      return 'Enter a valid non-negative price';
+    }
+
+    return null;
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,12 +202,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       labelText: 'Item Name',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter an item name';
-                      }
-                      return null;
-                    },
+                    validator: _validateName,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -206,16 +212,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       labelText: 'Quantity',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a quantity';
-                      }
-                      final quantity = int.tryParse(value.trim());
-                      if (quantity == null || quantity < 0) {
-                        return 'Enter a valid non-negative integer';
-                      }
-                      return null;
-                    },
+                    validator: _validateQuantity,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -225,16 +222,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       labelText: 'Price',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a price';
-                      }
-                      final price = double.tryParse(value.trim());
-                      if (price == null || price < 0) {
-                        return 'Enter a valid non-negative price';
-                      }
-                      return null;
-                    },
+                    validator: _validatePrice,
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
